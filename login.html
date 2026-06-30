@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxora | Client Gateway</title>
+    <meta name="description"
+        content="Secure portal registration and authentication for Luxora bespoke e-commerce clients.">
+
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <script>
+        // Automatic Redirect Gatekeeper: if already logged in, skip login page
+        if (localStorage.getItem('luxora_current_user')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-primary: #fcfbf9;
+            --bg-secondary: #ffffff;
+            --bg-glass: rgba(255, 255, 255, 0.85);
+            --border-color: rgba(212, 175, 55, 0.18);
+            --border-hover: rgba(212, 175, 55, 0.4);
+
+            --color-gold: #c5a028;
+            --color-gold-hover: #a37f19;
+            --color-gold-light: #8c6d17;
+            --color-gold-dark: #6e540f;
+            --color-text-primary: #1c1c1e;
+            --color-text-secondary: #60606a;
+            --color-text-muted: #9595a5;
+
+            --color-success: #059669;
+            --color-danger: #dc2626;
+            --color-warning: #d97706;
+
+            --glow-gold: 0 8px 24px rgba(197, 160, 40, 0.12);
+            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-fast: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            --font-display: 'Playfair Display', serif;
+            --font-sans: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.04) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .gateway-wrapper {
+            width: 100%;
+            max-width: 440px;
+            perspective: 1000px;
+        }
+
+        .glass-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(197, 160, 40, 0.05), 0 4px 16px rgba(0, 0, 0, 0.02);
+            padding: 2.5rem 2rem;
+            transition: var(--transition-smooth);
+        }
+
+        .glass-panel:hover {
+            border-color: var(--border-hover);
+        }
+
+        .brand-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            color: var(--color-gold);
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.4));
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--color-gold-light) 0%, var(--color-gold) 50%, var(--color-gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-sub {
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--color-text-secondary);
+            font-weight: 600;
+            margin-top: -0.25rem;
+        }
+
+        /* Tab Switcher */
+        .tab-switcher {
+            display: flex;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            padding: 0.25rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--color-text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.6rem 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .tab-btn.active {
+            background: var(--color-gold);
+            color: #ffffff;
+            box-shadow: var(--glow-gold);
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem;
+            outline: none;
+            transition: var(--transition-fast);
+        }
+
+        .form-control:focus {
+            border-color: var(--color-gold);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+            background: #ffffff;
+        }
+
+        .btn {
+            background: var(--color-gold);
+            border: 1px solid var(--color-gold-hover);
+            color: #ffffff;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition-fast);
+            box-shadow: var(--glow-gold);
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: var(--color-gold-hover);
+            box-shadow: 0 12px 28px rgba(197, 160, 40, 0.22);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: var(--color-text-secondary);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.02);
+            color: var(--color-text-primary);
+            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: none;
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 1000;
+            max-width: 380px;
+        }
+
+        .toast {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--color-text-primary);
+            backdrop-filter: blur(12px);
+            transform: translateY(30px);
+            opacity: 0;
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: var(--transition-fast);
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Server Mode indicator inside Gateway */
+        .gateway-mode-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.demo {
+            background-color: var(--color-warning);
+            box-shadow: 0 0 8px var(--color-warning);
+        }
+
+        .status-dot.live {
+            background-color: var(--color-success);
+            box-shadow: 0 0 8px var(--color-success);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="gateway-wrapper">
+        <div class="glass-panel">
+            <div class="brand-section">
+                <!-- Crest Logo -->
+                <svg class="logo-icon" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L4 7V17L12 22L20 17V7L12 2Z" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M12 22V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M20 7L12 12L4 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <div class="logo-text">LUXORA</div>
+                <div class="brand-sub">Bespoke Collection</div>
+            </div>
+
+            <!-- Tab Selectors -->
+            <div class="tab-switcher" id="auth-tab-bar">
+                <button class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+                <button class="tab-btn" onclick="switchAuthTab('signup')">Register</button>
+            </div>
+
+            <!-- Forms Container -->
+            <div id="auth-forms-wrapper">
+                <!-- Phase 1: Email Form -->
+                <form id="email-stage-form" onsubmit="handleRequestOTP(event)">
+                    <div class="form-group" id="signup-name-field" style="display: none;">
+                        <label class="form-label" for="client-name">Client Name</label>
+                        <input type="text" id="client-name" class="form-control" placeholder="Full name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="client-email">Email Address</label>
+                        <input type="email" id="client-email" class="form-control" placeholder="client@address.com"
+                            required>
+                    </div>
+                    <button type="submit" class="btn" style="margin-top: 1rem;">
+                        Send Verification Code
+                    </button>
+                </form>
+
+                <!-- Phase 2: Verification Code Form (Hidden by default) -->
+                <form id="otp-stage-form" onsubmit="handleVerifyOTP(event)" style="display: none;">
+                    <p style="font-size: 0.9rem; color: var(--color-text-secondary); text-align: center; margin-bottom: 1.5rem;"
+                        id="otp-instruction-text">
+                        A verification passcode has been dispatched.
+                    </p>
+                    <div class="form-group" style="text-align: center;">
+                        <label class="form-label" for="client-otp" style="text-align: left;">Passcode</label>
+                        <input type="text" id="client-otp" class="form-control" placeholder="------" required
+                            pattern="[0-9]{6}" maxlength="6"
+                            style="text-align: center; font-size: 1.8rem; letter-spacing: 6px; font-weight: bold; border-color: var(--color-gold);">
+                    </div>
+                    <div
+                        style="text-align: center; font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1.5rem;">
+                        Passcode expires in <span id="countdown-timer"
+                            style="color: var(--color-gold); font-weight: bold;">05:00</span>
+                    </div>
+                    <button type="submit" class="btn" style="margin-bottom: 1rem;">
+                        Verify & Enter
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="revertToEmailStage()">
+                        Back
+                    </button>
+                </form>
+            </div>
+
+            <!-- Server Mode status indicator -->
+            <div class="gateway-mode-indicator">
+                <span id="gateway-status-dot" class="status-dot demo"></span>
+                <span id="gateway-status-text" style="color: var(--color-text-secondary);">Demo sandbox mode</span>
+            </div>
+
+            <!-- Guest Link -->
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="index.html"
+                    style="color: var(--color-gold); font-size: 0.9rem; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: var(--transition-fast);"
+                    onmouseover="this.style.borderBottomColor='var(--color-gold)'"
+                    onmouseout="this.style.borderBottomColor='transparent'">Continue as Guest &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const API_URL = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : `${window.location.protocol}//${window.location.hostname}:5000/api`;
+        let authType = 'login'; // 'login' or 'signup'
+        let currentMode = 'demo';
+        let countdownInterval = null;
+        let submittedEmail = '';
+        let submittedName = '';
+
+        // Detect connection to local API server to switch modes
+        async function detectConnectionMode() {
+            try {
+                const res = await fetch(`${API_URL}/../`, { method: 'GET' });
+                if (res.ok) {
+                    currentMode = 'live';
+                    document.getElementById('gateway-status-dot').className = 'status-dot live';
+                    document.getElementById('gateway-status-text').innerText = 'Live MySQL Database online';
+                }
+            } catch (e) {
+                // Fallback to Demo sandbox mode
+                currentMode = 'demo';
+                document.getElementById('gateway-status-dot').className = 'status-dot demo';
+                document.getElementById('gateway-status-text').innerText = 'Demo sandbox active (offline)';
+            }
+        }
+
+        // Switch Tabs (Sign In / Register)
+        function switchAuthTab(type) {
+            authType = type;
+            const buttons = document.querySelectorAll('#auth-tab-bar .tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            const activeBtnIndex = type === 'login' ? 0 : 1;
+            buttons[activeBtnIndex].classList.add('active');
+
+            const nameField = document.getElementById('signup-name-field');
+            const nameInput = document.getElementById('client-name');
+
+            if (type === 'signup') {
+                nameField.style.display = 'block';
+                nameInput.required = true;
+            } else {
+                nameField.style.display = 'none';
+                nameInput.required = false;
+            }
+            revertToEmailStage();
+        }
+
+        // Revert form states back to Email input
+        function revertToEmailStage() {
+            document.getElementById('email-stage-form').style.display = 'block';
+            document.getElementById('otp-stage-form').style.display = 'none';
+            document.getElementById('client-otp').value = '';
+            clearInterval(countdownInterval);
+        }
+
+        // Timer controller
+        function startTimer() {
+            clearInterval(countdownInterval);
+            let time = 5 * 60;
+            const display = document.getElementById('countdown-timer');
+
+            const update = () => {
+                let min = Math.floor(time / 60);
+                let sec = time % 60;
+                display.innerText = `${min < 10 ? '0' + min : min}:${sec < 10 ? '0' + sec : sec}`;
+                if (time <= 0) {
+                    clearInterval(countdownInterval);
+                    display.innerText = 'Expired';
+                    showToast('Passcode has expired. Please try again.', 'error');
+                }
+                time--;
+            };
+            update();
+            countdownInterval = setInterval(update, 1000);
+        }
+
+        // Request OTP Passcode Action
+        async function handleRequestOTP(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('client-email').value.trim();
+            const nameInput = document.getElementById('client-name').value.trim();
+
+            if (!emailInput) return;
+            if (authType === 'signup' && !nameInput) return;
+
+            submittedEmail = emailInput;
+            submittedName = nameInput;
+
+            showToast('Requesting passcode verification...');
+
+            try {
+                if (currentMode === 'live') {
+                    const res = await fetch(`${API_URL}/auth/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: submittedEmail,
+                            name: authType === 'signup' ? submittedName : undefined,
+                            type: authType
+                        })
+                    });
+                    const resJson = await res.json();
+                    if (!res.ok) throw new Error(resJson.message || 'Verification request failed.');
+                    showToast('Passcode dispatched successfully!');
+                } else {
+                    // Demo Sandbox mode simulation
+                    console.log(`\n==================================================`);
+                    console.log(`[DEMO MODE] OTP requested for: ${submittedEmail}`);
+                    console.log(`[DEMO MODE] Code: 123456 (valid for 5 mins)`);
+                    console.log(`==================================================\n`);
+                    showToast('Passcode dispatched! (Demo code: 123456 printed in terminal console)');
+                }
+
+                // Transition UI state
+                document.getElementById('otp-instruction-text').innerText = `A secure 6-digit passcode has been sent to ${submittedEmail}.`;
+                document.getElementById('email-stage-form').style.display = 'none';
+                document.getElementById('otp-stage-form').style.display = 'block';
+                startTimer();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Verify OTP Passcode Action
+        async function handleVerifyOTP(e) {
+            e.preventDefault();
+            const otpCode = document.getElementById('client-otp').value.trim();
+            if (!otpCode || otpCode.length !== 6) return;
+
+            showToast('Validating code...');
+
+            try {
+                let nameToSave = submittedName || submittedEmail.split('@')[0];
+
+                if (currentMode === 'live') {
+                    const res = await fetch(`${API_URL}/auth/verify-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: submittedEmail,
+                            otp: otpCode
+                        })
+                    });
+                    const resJson = await res.json();
+                    if (!res.ok) throw new Error(resJson.message || 'Invalid passcode verification.');
+
+                    nameToSave = resJson.data.name || nameToSave;
+                } else {
+                    // Demo verification
+                    if (otpCode !== '123456') {
+                        throw new Error('Verification code is invalid.');
+                    }
+                }
+
+                // Authenticated successfully
+                localStorage.setItem('luxora_current_user', submittedEmail);
+                localStorage.setItem('luxora_current_user_name', nameToSave);
+
+                showToast('Authenticated! Connecting to storefront...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Helper to display notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let iconSvg = '';
+            if (type === 'success') {
+                iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else if (type === 'error') {
+                iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+            } else {
+                iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+            }
+
+            toast.innerHTML = `
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    ${iconSvg}
+                    <div>${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize connection mode detection on load
+        window.addEventListener('DOMContentLoaded', detectConnectionMode);
+    </script>
+</body>
+
+</html>
